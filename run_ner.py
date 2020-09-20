@@ -306,16 +306,16 @@ def main():
   
     processor = NerProcessor()
     label_list = processor.get_labels()
-    print(label_list)
+    
     num_labels = len(label_list) + 1
-    print(num_labels)
+  
 
     if os.path.exists(args.output_dir) and os.listdir(args.output_dir) and args.do_train:
         raise ValueError("Output directory ({}) already exists and is not empty.".format(args.output_dir))
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    print(args.do_train)
+    
     if args.do_train:
         tokenizer = FullTokenizer(os.path.join(args.bert_model, "vocab.txt"), args.do_lower_case)
 
@@ -343,7 +343,6 @@ def main():
             epsilon=args.adam_epsilon,
             exclude_from_weight_decay=['layer_norm', 'bias'])
 
-        #with strategy.scope():
         ner = BertNer(args.bert_model, tf.float32, num_labels, args.max_seq_length)
         # loss_fct = tf.keras.losses.SparseCategoricalCrossentropy(reduction=tf.keras.losses.Reduction.NONE)
         loss_fct = tf.keras.losses.SparseCategoricalCrossentropy(reduction=tf.keras.losses.Reduction.NONE)
@@ -352,12 +351,10 @@ def main():
 
 
     label_map = {i: label for i, label in enumerate(label_list, 1)}
-    print(label_map)
     if args.do_train:
         train_features = convert_examples_to_features(
             train_examples, label_list, args.max_seq_length, tokenizer)
 
-        #print(train_features)
         logger.info("***** Running training *****")
         logger.info("  Num examples = %d", len(train_examples))
         logger.info("  Batch size = %d", args.train_batch_size)
@@ -384,9 +381,6 @@ def main():
                                                 seed = args.seed,
                                                 reshuffle_each_iteration=True)
         batched_train_data = shuffled_train_data.batch(args.train_batch_size)
-        
-        # Distributed dataset
-        #dist_dataset = strategy.experimental_distribute_dataset(batched_train_data)
 
         loss_metric = tf.keras.metrics.Mean()
 
@@ -395,33 +389,18 @@ def main():
             float(len(train_features))/float(args.train_batch_size))
 
         def train_step(input_ids, input_mask, segment_ids, valid_ids, label_ids,label_mask):
-            # def step_fn(input_ids, input_mask, segment_ids, valid_ids, label_ids,label_mask):
 
             with tf.GradientTape() as tape:
-                #print("shape of label_ids is ", label_ids.shape)
                 logits = ner(input_ids, input_mask,segment_ids, valid_ids, training=True) #batchsize, max_seq_length, num_labels
                 label_ids_masked = tf.boolean_mask(label_ids,label_mask)
                 logits_masked = tf.boolean_mask(logits,label_mask)
                 loss = loss_fct(label_ids_masked, logits_masked)
-                # loss1 = l_fct(label_ids_masked, logits_masked)
-                # loss2 = loss11_fct(label_ids_masked, logits_masked)
-                # l = tf.reduce_sum(loss) * (1.0 / args.train_batch_size)
-                # l2 = tf.reduce_sum(loss2) * (1.0 / args.train_batch_size)
-                #print(f"loss valuesm {l} and original {loss1} and with from_logits {l2}")
-                #cross_entropy = loss_fct(label_ids_masked, logits_masked)
-                #loss = tf.reduce_sum(cross_entropy) * (1.0 / args.train_batch_size)
+         
             grads = tape.gradient(loss, ner.trainable_variables)
             optimizer.apply_gradients(list(zip(grads, ner.trainable_variables)))
             return loss
 
-            # per_example_losses = strategy.experimental_run_v2(step_fn,
-            #                          args=(input_ids, input_mask, segment_ids, valid_ids, label_ids,label_mask))
-            # mean_loss = strategy.reduce(tf.distribute.ReduceOp.MEAN, per_example_losses, axis=0)
-            # return mean_loss
-
-        #import ipdb; ipdb.set_trace()
         for epoch in epoch_bar:
-            # with strategy.scope():
             for (input_ids, input_mask, segment_ids, valid_ids, label_ids,label_mask) in progress_bar(batched_train_data, total=pb_max_len, parent=epoch_bar):
                 loss = train_step(input_ids, input_mask, segment_ids, valid_ids, label_ids,label_mask)
                 loss_metric(loss)
