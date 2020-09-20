@@ -19,10 +19,12 @@ code for pre-trained bert from [tensorflow-offical-models](https://github.com/te
 
 ## Single GPU
 
-To evaluate on valid dataset
+To evaluate on valid dataset:
+
 `python run_ner.py --data_dir=data/ --bert_model=bert-base-cased --output_dir=model_sep20 --max_seq_length=128 --do_train --num_train_epochs 3 --do_eval --eval_on dev`
 
-To evaluate on test dataset
+To evaluate on test dataset:
+
 `python run_ner.py --data_dir=data/ --bert_model=bert-base-cased --output_dir=model_sep20 --max_seq_length=128 --do_train --num_train_epochs 3 --do_eval --eval_on test`
 
 # Result
