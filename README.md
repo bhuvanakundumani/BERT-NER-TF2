@@ -55,10 +55,12 @@ macro avg     0.9451    0.9509    0.9479      5942
 micro avg     0.9054    0.9205    0.9129      5648
 macro avg     0.9068    0.9205    0.9135      5648
 ```
-## Pretrained model download from [here]
 
 
-# Inference - Refer infer_singlesent.py
+
+# Inference 
+
+Refer infer_singlesent.py
 
 ```python
 from bert import Ner
