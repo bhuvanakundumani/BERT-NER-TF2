@@ -85,7 +85,7 @@ celerybeat-schedule
 .env
 .venv
 env/
-venv/
+venve/
 ENV/
 env.bak/
 venv.bak/
@@ -105,12 +105,12 @@ venv.bak/
 
 # vscode
 .vscode/
-
+.DS_Store
 # weights
 bert-*/
 *.h5
 *.json
-*.txt
+
 *.zip
 
 # output files
